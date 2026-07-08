@@ -46,10 +46,9 @@ if "global_pedigree" not in st.session_state:
         "COW_501": {"sire": "HO_CHIEF", "dam": "OLD_DAM_B"}
     }
 
-# Female Phenotypic Database for Reproductive Performance and Parity tracking
 COW_PHENOTYPES = {
     "HEIFER_601": {"type": "Heifer", "PTAM": 500, "PTAP": 20, "PTAF": 22, "PL": 2.0, "DPR": 1.2, "UDC": 0.8},
-    "COW_501": {"type": "Mature Cow", "PTAM": 300, "PTAP": 10, "PTAF": 12, "PL": 1.0, "DPR": -1.5, "UDC": 0.4} # Low fertility cow
+    "COW_501": {"type": "Mature Cow", "PTAM": 300, "PTAP": 10, "PTAF": 12, "PL": 1.0, "DPR": -1.5, "UDC": 0.4}
 }
 
 CALVING_EASE_ALERT_DB = {
@@ -58,7 +57,6 @@ CALVING_EASE_ALERT_DB = {
     "SHOTTLE": 1.7
 }
 
-# 2. OPTION 1: CDCB LIVE API SYNCHRONIZATION CONNECTOR
 def fetch_cdcb_api_proofs(bull_id):
     time.sleep(0.2)
     base_modifier = random.randint(-10, 10)
@@ -71,14 +69,12 @@ def fetch_cdcb_api_proofs(bull_id):
         "UDC": round(1.8 + (base_modifier * 0.05), 2)
     }
 
-# 3. DEEP ANCESTRY TRAVERSAL MATRICES
 def trace_lineage_infinite(animal_id, pedigree_registry, current_depth=1, max_depth=10):
     if current_depth > max_depth or not animal_id:
         return {}
     record = pedigree_registry.get(animal_id)
     if not record:
         return {"id": animal_id, "sire": None, "dam": None, "depth": current_depth}
-    
     sire = record.get("sire")
     dam = record.get("dam")
     return {
@@ -103,14 +99,11 @@ def calculate_deep_inbreeding(bull_id, cow_id, pedigree_registry):
     cow_tree = trace_lineage_infinite(cow_id, pedigree_registry)
     bull_flat = extract_flat_ancestors(bull_tree)
     cow_flat = extract_flat_ancestors(cow_tree)
-    
     bull_flat.pop(bull_id, None)
     cow_flat.pop(cow_id, None)
-    
     shared = set(bull_flat.keys()).intersection(set(cow_flat.keys()))
     if not shared:
         return 0.0
-        
     f_coefficient = 0.0
     for ancestor in shared:
         f_coefficient += (0.5) ** (bull_flat[ancestor] + cow_flat[ancestor] - 1)
@@ -119,7 +112,6 @@ def calculate_deep_inbreeding(bull_id, cow_id, pedigree_registry):
 def check_calving_ease_ancestry(cow_id, pedigree_registry, threshold=2.2):
     cow_tree = trace_lineage_infinite(cow_id, pedigree_registry)
     cow_flat = extract_flat_ancestors(cow_tree)
-    
     flagged_ancestors = []
     for ancestor in cow_flat.keys():
         if ancestor in CALVING_EASE_ALERT_DB:
@@ -128,34 +120,27 @@ def check_calving_ease_ancestry(cow_id, pedigree_registry, threshold=2.2):
                 flagged_ancestors.append(f"{ancestor} ({score}% SCE)")
     return flagged_ancestors
 
-# 4. OPTION 3: INTERACTIVE VISUAL TEXT-GRAPH GENERATOR
 def render_text_pedigree_tree(animal_id, pedigree_registry, prefix="", is_tail=True, level=0, max_display_level=4):
     if level > max_display_level or not animal_id:
         return ""
-        
     record = pedigree_registry.get(animal_id)
     node_name = f"🧬 {animal_id}" if level == 0 else f"{animal_id}"
     tree_line = f"{prefix}{'└── ' if is_tail else '├── '}{node_name}\n"
-    
     if record:
         sire = record.get("sire") if record.get("sire") else "Unknown Sire"
         dam = record.get("dam") if record.get("dam") else "Unknown Dam"
         new_prefix = prefix + ("    " if is_tail else "│   ")
         tree_line += render_text_pedigree_tree(sire, pedigree_registry, new_prefix, False, level + 1, max_display_level)
         tree_line += render_text_pedigree_tree(dam, pedigree_registry, new_prefix, True, level + 1, max_display_level)
-        
     return tree_line
 
-# 5. USER INTERFACE DASHBOARD ARCHITECTURE
 st.title("🐄 Purebred Holstein Friesian Genetic Strategy Engine")
 st.markdown("Automated CDCB synchronization, strict replacement reproduction policies, and barn report exporting modules.")
 
 tab1, tab2, tab3 = st.tabs(["⚡ CDCB & Stock Management", "📊 Advanced Mating Optimizer Matrix", "🌳 Interactive Pedigree Tree Maps"])
 
-# TAB 1: API & INVENTORY HUB
 with tab1:
     st.header("CDCB Portal & Advanced Straw Inventory")
-    
     col_sync1, col_sync2 = st.columns(2)
     with col_sync1:
         if st.button("🔄 Sync Sires Live With CDCB"):
@@ -167,7 +152,6 @@ with tab1:
     with col_sync2:
         st.info("💡 Tracks cheese premium proteins, calving safety risks, and isolates inventory splits to prevent line breeding issues.")
 
-    # Render Current Sire Catalog Grid
     catalog_display = []
     for k, v in st.session_state.bull_catalog.items():
         catalog_display.append({
@@ -184,11 +168,8 @@ with tab1:
         })
     st.dataframe(pd.DataFrame(catalog_display), use_container_width=True)
 
-# TAB 2: ADVANCED PAIRING MATRIX
 with tab2:
     st.header("Purebred Replacement Pairing Matrix")
-    
-    # Structural Weights Formula Setup
     weights = {"PTAM": 0.02, "PTAP": 24.0, "PTAF": 14.0, "PL": 10.0, "DPR": 5.0, "UDC": 12.0}
     active_herd_cows = list(COW_PHENOTYPES.keys())
     
@@ -198,7 +179,6 @@ with tab2:
     
     cow_data = COW_PHENOTYPES[selected_cow]
     
-    # EVALUATION FEATURE 1: HEIFER VS MATURE COW POLICY ENGINE
     st.subheader("🛡️ Reproductive Policy Analysis")
     policy_col1, policy_col2 = st.columns(2)
     
@@ -210,6 +190,13 @@ with tab2:
             st.info(f"📋 **Mature Cow Policy Triggered:** {selected_cow} is a mature cow. System allows both Conventional and Sexed choices.")
             semen_policy = "Any"
 
-    # EVALUATION FEATURE 2: FERTILITY REPAIR REPRODUCTIVE FILTER
     with policy_col2:
         if cow_data["DPR"] < 0.0:
+            st.warning(f"⚠️ **Fertility Repair Active:** {selected_cow} has a negative Daughter Pregnancy Rate ({cow_data['DPR']}%). Sires with negative DPR values are blocked.")
+            dpr_repair_active = True
+        else:
+            st.success(f"✅ **Fertility Baseline Stable:** {selected_cow} possesses positive reproductive scores ({cow_data['DPR']}%).")
+            dpr_repair_active = False
+
+    maternal_ce_risks = check_calving_ease_ancestry(selected_cow, st.session_state.global_pedigree)
+    if maternal_ce_risks:
